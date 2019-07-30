@@ -1,27 +1,13 @@
 <Config>
-	<maxBufferSize>
-		30
-	</maxBufferSize>
-	<driver>
-		com.mysql.cj.jdbc.Driver
-	</driver>
-	<tableName>
-		result
-	</tableName>
-	<delay>
-		5
-	</delay>
+	<maxBufferSize>30</maxBufferSize>
+	<driver>com.mysql.cj.jdbc.Driver</driver>
+	<tableName>result</tableName>
+	<delay>5</delay>
 	<servers>
 		<servers>
-			<url>
-				jdbc:mysql://localhost:3306/events?useUnicode=true&amp;useJDBCCompliantTimezoneShift=true&amp;useLegacyDatetimeCode=false&amp;serverTimezone=Europe/Moscow
-			</url>
-			<user>
-				root
-			</user>
-			<password>
-				1122334455
-			</password>
+			<url>jdbc:mysql://localhost:3306/events?useUnicode=true&amp;useJDBCCompliantTimezoneShift=true&amp;useLegacyDatetimeCode=false&amp;serverTimezone=Europe/Moscow</url>
+			<user>root</user>
+			<password>1122334455</password>
 		</servers>
 	</servers>
 </Config>

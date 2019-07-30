@@ -8,36 +8,37 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Date;
 import java.util.List;
 import java.util.Queue;
 import java.util.Scanner;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class DatabaseWriter implements Runnable {
 
-	ThreadLocal<Queue<Long>> localQue = new ThreadLocal<>();
+	private Counter counter = new Counter();
+	
+	private Config config = EventRegister.getConfig();
+	private Queue<Long> que = EventRegister.getQueue();
+	private Logger log = EventRegister.getLog();
 	
 	public void run() {
-		
-		System.out.println("Data saving process started");
-		
-		Config config = EventRegister.getConfig();
-		Queue<Long> que = EventRegister.getQueue();
 		
         try
         {
             Class.forName(config.getDriver());
-        }
-        catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             System.out.println(config.getDriver() + " not found !!");
             return;
         }
 
+		log.info("Data saving process started at " + new Date().getTime());
+		
 		String sqlQuery;
 		String sqlInsert = "INSERT INTO " + config.getTableName() + " VALUES "; 
 		String sqlCreateTable = "CREATE TABLE IF NOT EXISTS `events`.`" + config.getTableName() + "` (`data` BIGINT(20) NOT NULL)";
-		int size;
 		int currentServer = 0;
 		List<Server> servers = config.getServers();
 		int numberOfServers = servers.size();
@@ -52,19 +53,22 @@ public class DatabaseWriter implements Runnable {
 				currentServer++;
 				if (currentServer >= numberOfServers) {
 					String fileName = writeBufferToFile(que);
-					System.out.println("All reserve servers done or extremally slow. \n "
+					log.info("All reserve servers done or extremally slow. \n "
 							+ "Data temporary saved to file '" + fileName + "'\n"
 							+ "Restore servers accessibility and use 'eventregister -u " + fileName + "' to update database. \n"
 							+ "Then type CONTINUE to resume procees of data saving. \n"
 							+ "All data for waiting period will be saved.");
+					
+					// Typing CONTINUE customer confirm, that working condition of SQL server restored and database updated
+					// After input data from buffer will be saved to database and process will be continued
 					while (!cont.toLowerCase().equals("continue")) {
 						cont = sc.next();
 					}
 					currentServer = 0;
 					cont = "";
-					System.out.println("Resume saving process to server " + servers.get(currentServer).getUrl());
+					log.info("Resume saving process to server " + servers.get(currentServer).getUrl());
 				} else {
-					System.out.println("Switched to reserve server " + servers.get(currentServer).getUrl() + " at time " + que.peek());
+					log.info("Switched to reserve server " + servers.get(currentServer).getUrl() + " at time " + que.peek());
 				}
 				server = servers.get(currentServer);
 			}
@@ -76,22 +80,30 @@ public class DatabaseWriter implements Runnable {
 			{
 				statement.executeUpdate(sqlCreateTable);
 				while (true) {
-					localQue.set(que);
-					size = localQue.get().size();
-					if (size > 0) {
-						sqlQuery = localQue.get().stream()
-								.map((t) -> "("+t.toString()+")")
-								.collect(Collectors.joining(", ", sqlInsert, ""));
-						statement.executeUpdate(sqlQuery);
-						IntStream.range(0, size).forEach(i -> que.poll());
+					synchronized (que) {
+						while (que.isEmpty()) {
+							try {
+								que.wait();
+							} catch (InterruptedException e) {}
+						}
 					}
+					
+					counter.set(0);
+					sqlQuery = que.stream()
+							.map(t -> {
+								counter.plus();
+								return "("+t.toString()+")";
+							})
+							.collect(Collectors.joining(", ", sqlInsert, ""));
+					statement.executeUpdate(sqlQuery);
+					IntStream.range(0, counter.get()).forEach(i -> que.poll());
 				}
 			} catch (SQLException e) {
-				System.out.println("Connection lost! Try to reconnect in " + config.getDelay() + " seconds.");
+				log.info("Connection lost! Try to reconnect in " + config.getDelay() + " seconds.");
 				try {
 					Thread.sleep(config.getDelay()*1000);
 				} catch (InterruptedException e1) {
-					e1.printStackTrace();
+					log.info(e1.toString());
 				}
 			} 
 		}
@@ -100,10 +112,12 @@ public class DatabaseWriter implements Runnable {
 	private String writeBufferToFile(Queue<Long> que) {
 		File file = new File("register" + que.peek() + ".data");
 		BufferedWriter writer;
-		localQue.set(que);
-		int size = localQue.get().size();
-		String data = localQue.get().stream()
-				.map((t) -> t.toString())
+		counter.set(0);
+		String data = que.stream()
+				.map(t -> {
+					counter.plus();
+					return t.toString();
+				})
 				.collect(Collectors.joining("\n"));
 		try {
 			file.createNewFile();
@@ -111,12 +125,30 @@ public class DatabaseWriter implements Runnable {
 			writer.write(data);
 			writer.flush();
 			writer.close();
-			IntStream.range(0, size).forEach(i -> que.poll());
+			IntStream.range(0, counter.get()).forEach(i -> que.poll());
 		} catch (IOException e) {
-			e.printStackTrace();
+			log.info("Unable to write file!");
 		}
 		
 		return file.getName();
 	}
 
 }
+
+class Counter {
+	private int i;
+
+	public int get() {
+		return i;
+	}
+
+	public void set(int i) {
+		this.i = i;
+	}
+	
+	public void plus() {
+		i++;
+	}
+	
+}
+

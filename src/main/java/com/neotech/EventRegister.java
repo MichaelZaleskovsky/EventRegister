@@ -10,13 +10,18 @@ import java.sql.Statement;
 import java.util.Queue;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.logging.Logger;
 
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 public class EventRegister {
 
+	private static final int MIN_TIMEOUT = 0;
+	private static final int MAX_TIMEOUT = 1500;
+	
 	private static Config config;
 	private static Queue<Long> queue = new ConcurrentLinkedQueue<Long>();
+	private static Logger log = Logger.getLogger(EventRegister.class.getName());
 
 	public static void main(String[] args) {
 		
@@ -28,35 +33,39 @@ public class EventRegister {
 		
 		if (args.length == 0) {
 			dbWriteProcess();
-			return;
+
 		} else if (args[0].equals("-p") && args.length >= 2) {
 			try {
 				dbPrint(Integer.parseInt(args[1]));
-				return;
 			} catch (NumberFormatException e) {
 				System.out.println("Second parameter must be digit!");
 			}
+
 		} else if (args[0].equals("-u") && args.length >= 2) {
-			dbFileUpdate(args[1]);
-			return;
+			dbUpdateFromFile(args[1]);
+
 		} else if (args[0].equals("-c")) {
 			if (dbСontinuity()) {
 				System.out.println("Database continuous!");
 			} else {
 				System.out.println("Database NOT continuous!");
 			}
-			return;
+
+		} else {
+			System.out.println("Invalid parameter " + args[0] + " is detected!");
+			System.out.println("Please use:");
+			System.out.println("eventregister                 // for start register process");
+			System.out.println("eventregister -p serverNum    // for print database to console, serverNum = 0 for base server, 1, 2, 3... for reserve");
+			System.out.println("eventregister -u filename     // for update database from file 'filename'");
+			System.out.println("eventregister -c     		  // to check is the database continuous or not");
 		}
-			
-		System.out.println("Invalid parameter " + args[0] + " is detected!");
-		System.out.println("Please use:");
-		System.out.println("eventregister                 // for start register process");
-		System.out.println("eventregister -p serverNum    // for print database to console, serverNum = 0 for base server, 1, 2, 3... for reserve");
-		System.out.println("eventregister -u filename     // for update database from file 'filename'");
-		System.out.println("eventregister -c     		  // to check is the database continuous or not");
 		return;
 	}
 	
+	public static Logger getLog() {
+		return log;
+	}
+
 	public static Queue<Long> getQueue() {
 		return queue;
 	}
@@ -69,26 +78,16 @@ public class EventRegister {
 		File file = new File("config.xml");
 		StringBuilder sb = new StringBuilder();
 	    XmlMapper mapper = new XmlMapper(); 
-	    String configStr;
-	    
-		try (Scanner scanner = new Scanner(file)) 
-		{
-			System.out.println("Reading configuration from config.xml");
-			
-			while (scanner.hasNextLine()) {
-				sb.append(scanner.next());
-			}
-			configStr = sb.toString();
-			
-			Config config = mapper.readValue(configStr, Config.class);
-			return config;
+	    Config config;
+		try {
+			config = mapper.readValue(file, Config.class);
 		} catch (IOException e) {
-			e.printStackTrace();
 			return null;
 		}
+	    return config;
 	}
 
-	private static void dbFileUpdate(String fileName) {
+	private static void dbUpdateFromFile(String fileName) {
 		File file = new File(fileName);
 		StringBuilder sb = new StringBuilder();
 	    String sqlQuery;
@@ -108,9 +107,11 @@ public class EventRegister {
 			}
 			sqlQuery = sb.toString().substring(0, sb.length()-2);
 			statement.executeUpdate(sqlQuery);
-			System.out.println("Base database server updated successfully");
-		} catch (IOException | SQLException e ) {
-			e.printStackTrace();
+			log.info("Base database server updated from file " + fileName + " successfully");
+		} catch (SQLException e ) {
+			log.info("Problem with SQL db detected, database was not updated");
+		} catch (IOException e ) {
+			log.info("File " + fileName + " not found or corrupted, database was not updated");
 		}
 	}
 
@@ -137,8 +138,10 @@ public class EventRegister {
 		new Thread(new DatabaseWriter()).start();
 	}
 
+	// Check is the time in every row of database more than previous and the difference less than 1,5 sec
 	private static boolean dbСontinuity() {
 		System.out.println("Check the continuity of database.");
+		boolean res = true;
 		Server server = config.getServers().get(0);
 		String sqlSelect = "SELECT * FROM " + config.getTableName();
 		try (
@@ -151,14 +154,16 @@ public class EventRegister {
 			while(result.next())
 			{
 			    curr = Long.parseLong(result.getString(1)); 
-			    if (prev > 0 && ((curr - prev) < 0 || (curr - prev) > 1500)) {
+			    if (prev != 0 && ((curr - prev) < MIN_TIMEOUT || (curr - prev) > MAX_TIMEOUT)) {
 			    	return false;
 			    }
+			    prev = curr;
 			}
 		} catch (SQLException e) {
 			System.out.println("Connection lost or database is incompatible.");
-			return false;
+			res = false;
 		}
-		return true;
+		return res;
 	}
 }
+

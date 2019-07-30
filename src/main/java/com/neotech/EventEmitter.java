@@ -12,6 +12,10 @@ public class EventEmitter implements Runnable {
 		while(true) {
 			timestamp = new Date().getTime();
 			que.offer(timestamp);
+			synchronized (que) {
+				que.notifyAll();
+			}
+			
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {

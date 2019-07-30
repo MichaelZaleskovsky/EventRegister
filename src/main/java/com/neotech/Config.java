@@ -4,11 +4,11 @@ import java.util.List;
 
 public class Config {
 
-	int maxBufferSize;
-	String driver;
-	String tableName;
-	int delay;
-	List<Server> servers;
+	private int maxBufferSize;
+	private String driver;
+	private String tableName;
+	private int delay;
+	private List<Server> servers;
 
 	public int getDelay() {
 		return delay;
@@ -55,9 +55,9 @@ public class Config {
 }
 
 class Server {
-	String url;
-	String user;
-	String password;
+	private String url;
+	private String user;
+	private String password;
 
 	public Server() {
 	}
