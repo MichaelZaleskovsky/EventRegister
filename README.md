@@ -24,8 +24,8 @@ Please use: | purpose
 
 ## config.xml
 ### Use configuration file to setup variables:
-#### maxBufferSize - when buffer size reach this value system will try to switch server or save data to file
-#### driver - JDBC driver for actual SQL database
-#### tableName - name of table in database to keep data
-#### delay - time in seconds between attempt to restore connection
-#### servers - the list of reserved servers. It must contain at least one member to use it as a base.
+#### maxBufferSize - *when buffer size reach this value system will try to switch server or save data to file*
+#### driver - *JDBC driver for actual SQL database*
+#### tableName - *name of table in database to keep data*
+#### delay - *time in seconds between attempt to restore connection*
+#### servers - *the list of reserved servers. It must contain at least one member to use it as a base.*
