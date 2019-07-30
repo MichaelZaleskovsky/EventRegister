@@ -27,7 +27,7 @@ public class EventRegister {
 		
 		config = getConfigFromFile();
 		if (config == null) {
-			System.out.println("File config.xml not found or has wrong format!");
+			System.out.println("File config.xml is not found or has wrong format!");
 			return;
 		}
 		
@@ -38,7 +38,7 @@ public class EventRegister {
 			try {
 				dbPrint(Integer.parseInt(args[1]));
 			} catch (NumberFormatException e) {
-				System.out.println("Second parameter must be digit!");
+				System.out.println("The second parameter must be a number!");
 			}
 
 		} else if (args[0].equals("-u") && args.length >= 2) {
@@ -46,16 +46,16 @@ public class EventRegister {
 
 		} else if (args[0].equals("-c")) {
 			if (dbСontinuity()) {
-				System.out.println("Database continuous!");
+				System.out.println("Database is continuous!");
 			} else {
-				System.out.println("Database NOT continuous!");
+				System.out.println("Database is NOT continuous!");
 			}
 
 		} else {
 			System.out.println("Invalid parameter " + args[0] + " is detected!");
 			System.out.println("Please use:");
-			System.out.println("eventregister                 // for start register process");
-			System.out.println("eventregister -p serverNum    // for print database to console, serverNum = 0 for base server, 1, 2, 3... for reserve");
+			System.out.println("eventregister                 // for start registering process");
+			System.out.println("eventregister -p serverNum    // for print database to console, serverNum = 0 for main server, 1, 2, 3... for reserve");
 			System.out.println("eventregister -u filename     // for update database from file 'filename'");
 			System.out.println("eventregister -c     		  // to check is the database continuous or not");
 		}
@@ -107,11 +107,11 @@ public class EventRegister {
 			}
 			sqlQuery = sb.toString().substring(0, sb.length()-2);
 			statement.executeUpdate(sqlQuery);
-			log.info("Base database server updated from file " + fileName + " successfully");
+			log.info("THe main database server is updated from file " + fileName + " successfully");
 		} catch (SQLException e ) {
-			log.info("Problem with SQL db detected, database was not updated");
+			log.info("Problem with SQL db is detected, database was not updated");
 		} catch (IOException e ) {
-			log.info("File " + fileName + " not found or corrupted, database was not updated");
+			log.info("File " + fileName + " was not found or corrupted, database was not updated");
 		}
 	}
 
@@ -129,7 +129,7 @@ public class EventRegister {
 			    System.out.println(result.getString(1));    
 			}
 		} catch (SQLException e) {
-			System.out.println("Connection lost or database is incompatible.");
+			System.out.println("Connection is lost or database format is incompatible.");
 		}
 	}
 
@@ -160,7 +160,7 @@ public class EventRegister {
 			    prev = curr;
 			}
 		} catch (SQLException e) {
-			System.out.println("Connection lost or database is incompatible.");
+			System.out.println("Connection is lost or database is incompatible.");
 			res = false;
 		}
 		return res;

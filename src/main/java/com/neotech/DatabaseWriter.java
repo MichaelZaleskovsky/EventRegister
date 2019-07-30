@@ -30,7 +30,7 @@ public class DatabaseWriter implements Runnable {
         {
             Class.forName(config.getDriver());
         } catch (ClassNotFoundException e) {
-            System.out.println(config.getDriver() + " not found !!");
+            System.out.println(config.getDriver() + " is not found !!");
             return;
         }
 
@@ -53,22 +53,22 @@ public class DatabaseWriter implements Runnable {
 				currentServer++;
 				if (currentServer >= numberOfServers) {
 					String fileName = writeBufferToFile(que);
-					log.info("All reserve servers done or extremally slow. \n "
-							+ "Data temporary saved to file '" + fileName + "'\n"
+					log.info("All reserved servers failed or extremally slow. \n "
+							+ "Data temporary is saved to file '" + fileName + "'\n"
 							+ "Restore servers accessibility and use 'eventregister -u " + fileName + "' to update database. \n"
-							+ "Then type CONTINUE to resume procees of data saving. \n"
+							+ "Then type CONTINUE to resume process of data saving. \n"
 							+ "All data for waiting period will be saved.");
 					
-					// Typing CONTINUE customer confirm, that working condition of SQL server restored and database updated
-					// After input data from buffer will be saved to database and process will be continued
+					// By typing CONTINUE the customer confirms, that working condition of SQL server is restored and database is  updated
+					// Afterwards the data from buffer will be saved to database and the process will be continued
 					while (!cont.toLowerCase().equals("continue")) {
 						cont = sc.next();
 					}
 					currentServer = 0;
 					cont = "";
-					log.info("Resume saving process to server " + servers.get(currentServer).getUrl());
+					log.info("Saving process to server has been resumed" + servers.get(currentServer).getUrl());
 				} else {
-					log.info("Switched to reserve server " + servers.get(currentServer).getUrl() + " at time " + que.peek());
+					log.info("Output stream has been switched to reserve server " + servers.get(currentServer).getUrl() + " at time " + que.peek());
 				}
 				server = servers.get(currentServer);
 			}
@@ -99,7 +99,7 @@ public class DatabaseWriter implements Runnable {
 					IntStream.range(0, counter.get()).forEach(i -> que.poll());
 				}
 			} catch (SQLException e) {
-				log.info("Connection lost! Try to reconnect in " + config.getDelay() + " seconds.");
+				log.info("Connection is lost! Try to reconnect in " + config.getDelay() + " seconds.");
 				try {
 					Thread.sleep(config.getDelay()*1000);
 				} catch (InterruptedException e1) {
