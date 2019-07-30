@@ -15,7 +15,7 @@ database
 
 To start application run EventRegister.java
 
-Please use: | 
+Please use: | purpose
 ------------ | -------------
 **eventregister** | *start register process*
 **eventregister -p serverNum** | *print database to console, serverNum = 0 for base server, 1, 2, 3... for reserve*
