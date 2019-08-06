@@ -6,7 +6,6 @@ public class Config {
 
 	private int maxBufferSize;
 	private String driver;
-	private String tableName;
 	private int delay;
 	private List<Server> servers;
 
@@ -19,14 +18,6 @@ public class Config {
 	}
 
 	public Config() {
-	}
-
-	public String getTableName() {
-		return tableName;
-	}
-
-	public void setTableName(String tableName) {
-		this.tableName = tableName;
 	}
 
 	public String getDriver() {

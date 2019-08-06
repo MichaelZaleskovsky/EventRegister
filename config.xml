@@ -1,7 +1,6 @@
 <Config>
 	<maxBufferSize>30</maxBufferSize>
 	<driver>com.mysql.cj.jdbc.Driver</driver>
-	<tableName>result</tableName>
 	<delay>5</delay>
 	<servers>
 		<servers>

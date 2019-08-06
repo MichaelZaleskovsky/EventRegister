@@ -37,8 +37,8 @@ public class DatabaseWriter implements Runnable {
 		log.info("Data saving process started at " + new Date().getTime());
 		
 		String sqlQuery;
-		String sqlInsert = "INSERT INTO " + config.getTableName() + " VALUES "; 
-		String sqlCreateTable = "CREATE TABLE IF NOT EXISTS `events`.`" + config.getTableName() + "` (`data` BIGINT(20) NOT NULL)";
+		String sqlInsert = "INSERT INTO " + EventRegister.TABLE + " VALUES "; 
+		String sqlCreateTable = "CREATE TABLE IF NOT EXISTS `events`.`" + EventRegister.TABLE + "` (`data` BIGINT(20) NOT NULL)";
 		int currentServer = 0;
 		List<Server> servers = config.getServers();
 		int numberOfServers = servers.size();
@@ -81,11 +81,9 @@ public class DatabaseWriter implements Runnable {
 				statement.executeUpdate(sqlCreateTable);
 				while (true) {
 					synchronized (que) {
-						while (que.isEmpty()) {
-							try {
-								que.wait();
-							} catch (InterruptedException e) {}
-						}
+						try {
+							que.wait();
+						} catch (InterruptedException e) {}
 					}
 					
 					counter.set(0);
@@ -106,7 +104,7 @@ public class DatabaseWriter implements Runnable {
 					log.info(e1.toString());
 				}
 			} 
-		}
+		} 
 	}
 
 	private String writeBufferToFile(Queue<Long> que) {

@@ -12,10 +12,12 @@ all data will be kept in internal buffer.
 * At this moment it is possible to restore SQL server and use 'eventregister -u filename' command to update data from file to SQL 
 database 
 * Then type CONTINUE in console and press Enter. Data saving process will continue.
-* It is possible to use '-c' argument to check, is the database continuous (every next row more, then previouse and 
+
+## TEST
+* To test application use 'eventregister -c' argument to check, is the database continuous (every next row more, then previouse and 
 difference is about 1 sec.)
 
-To start application run EventRegister.java
+## To start application run EventRegister.java
 
 Please use: | purpose
 ------------ | -------------

@@ -18,10 +18,13 @@ public class EventRegister {
 
 	private static final int MIN_TIMEOUT = 0;
 	private static final int MAX_TIMEOUT = 1500;
+	public static final String TABLE = "result";
 	
 	private static Config config;
 	private static Queue<Long> queue = new ConcurrentLinkedQueue<Long>();
 	private static Logger log = Logger.getLogger(EventRegister.class.getName());
+	private static Connection connection;
+	private static Statement statement;
 
 	public static void main(String[] args) {
 		
@@ -91,7 +94,7 @@ public class EventRegister {
 		File file = new File(fileName);
 		StringBuilder sb = new StringBuilder();
 	    String sqlQuery;
-		String sqlInsert = "INSERT INTO " + config.getTableName() + " VALUES "; 
+		String sqlInsert = "INSERT INTO " + TABLE + " VALUES "; 
 		Server server = config.getServers().get(0);
 	    
 		try (
@@ -117,12 +120,7 @@ public class EventRegister {
 
 	private static void dbPrint(int serverNum) {
 		System.out.println("Print all data from database.");
-		Server server = config.getServers().get(serverNum);
-		String sqlSelect = "SELECT * FROM " + config.getTableName();
-		try (
-			Connection connection = DriverManager.getConnection(server.getUrl(), server.getUser(), server.getPassword());
-			Statement statement = connection.createStatement(); 
-			ResultSet result = statement.executeQuery(sqlSelect);)
+		try (ResultSet result = getResultSet(serverNum);)
 		{
 			while(result.next())
 			{
@@ -130,7 +128,12 @@ public class EventRegister {
 			}
 		} catch (SQLException e) {
 			System.out.println("Connection is lost or database format is incompatible.");
-		}
+		} 
+		try {
+			connection.close();
+			statement.close();
+		} catch (SQLException e) {} 
+
 	}
 
 	private static void dbWriteProcess() {
@@ -142,12 +145,7 @@ public class EventRegister {
 	private static boolean dbСontinuity() {
 		System.out.println("Check the continuity of database.");
 		boolean res = true;
-		Server server = config.getServers().get(0);
-		String sqlSelect = "SELECT * FROM " + config.getTableName();
-		try (
-			Connection connection = DriverManager.getConnection(server.getUrl(), server.getUser(), server.getPassword());
-			Statement statement = connection.createStatement(); 
-			ResultSet result = statement.executeQuery(sqlSelect);)
+		try (ResultSet result = getResultSet(0);)
 		{
 			long prev = 0;
 			long curr; 
@@ -163,7 +161,20 @@ public class EventRegister {
 			System.out.println("Connection is lost or database is incompatible.");
 			res = false;
 		}
+		try {
+			connection.close();
+			statement.close();
+		} catch (SQLException e) {} 
 		return res;
+	}
+	
+	private static ResultSet getResultSet(int num) throws SQLException {
+		Server server = config.getServers().get(num);
+		String sqlSelect = "SELECT * FROM " + TABLE;
+		connection = DriverManager.getConnection(server.getUrl(), server.getUser(), server.getPassword());
+		statement = connection.createStatement(); 
+		ResultSet result = statement.executeQuery(sqlSelect);
+		return result;
 	}
 }
 
