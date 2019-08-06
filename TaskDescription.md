@@ -1,7 +1,7 @@
 # Your challenge will be
 Develope application with 2 functions:
-* 1. After start app without parameters it is writing current time (timestamp) to database every 1 second.
-* 2. After start app with parameter -p it print database to the console and then finish.
+* After start app without parameters it is writing current time (timestamp) to database every 1 second.
+* After start app with parameter -p it print database to the console and then finish.
 
 Application must work correct in case the connection lost. In this case application must print message to console 
 and try to re-connect after 5 seconds. All data received during this waiting period should be saved to database 
